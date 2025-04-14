@@ -1,5 +1,7 @@
 import { createDeck, shuffleDeck, calculateHandValue } from './gameLogic.js';
 
+const socket = io(); // Connect to the server
+
 let deck = [];
 let playerHand = [];
 let dealerHand = [];
@@ -9,6 +11,9 @@ function startGame() {
     playerHand = [deck.pop(), deck.pop()];
     dealerHand = [deck.pop(), deck.pop()];
     updateUI();
+
+    // Notify server about game start
+    socket.emit('playerAction', { action: 'startGame', playerHand, dealerHand });
 }
 
 function hit() {
@@ -18,6 +23,9 @@ function hit() {
     } else {
         updateUI();
     }
+
+    // Notify server about hit action
+    socket.emit('playerAction', { action: 'hit', playerHand });
 }
 
 function stand() {
@@ -34,6 +42,9 @@ function stand() {
     } else {
         showMessage("It's a tie.");
     }
+
+    // Notify server about stand action
+    socket.emit('playerAction', { action: 'stand', playerHand, dealerHand });
 }
 
 function updateUI() {
@@ -44,6 +55,12 @@ function updateUI() {
 function showMessage(message) {
     document.getElementById('message').textContent = message;
 }
+
+// Listen for game state updates from the server
+socket.on('updateGameState', (data) => {
+    console.log('Game state updated:', data);
+    // Update UI or game state based on server data
+});
 
 document.getElementById('hit-button').addEventListener('click', hit);
 document.getElementById('stand-button').addEventListener('click', stand);
